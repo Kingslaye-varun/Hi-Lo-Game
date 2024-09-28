@@ -68,16 +68,15 @@ Card* createDeck() {
 // Function to shuffle the deck
 Card* shuffleDeck(Card* head) {
     Card* current = head;
-    Card* previous = NULL;
     Card* newHead = NULL;
     int len = 0;
-   
+
     // Find the length of the deck
     while (current != NULL) {
         len++;
         current = current->next;
     }
-   
+
     // Array to hold the pointers to cards
     Card** cardArray = (Card**)malloc(len * sizeof(Card*));
     current = head;
@@ -85,7 +84,7 @@ Card* shuffleDeck(Card* head) {
         cardArray[i] = current;
         current = current->next;
     }
-   
+
     // Shuffle the array
     srand(time(0));
     for (int i = len - 1; i > 0; i--) {
@@ -94,7 +93,7 @@ Card* shuffleDeck(Card* head) {
         cardArray[i] = cardArray[j];
         cardArray[j] = tempCard;
     }
-   
+
     // Reconstruct the deck with shuffled cards
     newHead = cardArray[0];
     current = newHead;
@@ -103,7 +102,7 @@ Card* shuffleDeck(Card* head) {
         current = current->next;
     }
     current->next = NULL;
-   
+
     free(cardArray);
     return newHead;
 }
@@ -127,8 +126,8 @@ char* getCardName(int rank) {
 void playGame(Card* deck) {
     ScoreNode* root = NULL;
     int score = 0;
-    float main_balance=100.0;
-    float balance = 100.0;
+    float main_balance = 100.0;
+    float balance = 0.0;
     float baseMultiplier = 1.01; // Base multiplier
     float multiplier = baseMultiplier;
     Card* currentCard = deck;
@@ -137,26 +136,26 @@ void playGame(Card* deck) {
     printf("Welcome to the HiLo Card Game!\n");
 
     while (continuePlaying) {
-        //balance+=main_balance;
         printf("Your current balance: $%.2f\n", main_balance);
         printf("Enter your bet amount: ");
         float bet;
         scanf("%f", &bet);
-        if(main_balance == 0){
-            printf("YOU ARE BANKRUPT!!! HAHAHA");
-            break;
-        }
+        
         // Check if the bet is valid
-        if (bet > main_balance) {
-            printf("Insufficient balance. Your current balance is: $%.)2f\n", main_balance);
+        if (bet <= 0) {
+            printf("Bet must be greater than 0.\n");
             continue;
         }
+        if (bet > main_balance) {
+            printf("Insufficient balance. Your current balance is: $%.2f\n", main_balance);
+            continue;
+        }
+
         // Deduct the bet from the balance
-        main_balance = balance;
         main_balance -= bet;
 
-       
         // Start the game
+        currentCard = shuffleDeck(deck); // Shuffle before each game
         while (currentCard != NULL && currentCard->next != NULL) {
             printf("Current card: %s\n", getCardName(currentCard->rank));
            
@@ -199,7 +198,7 @@ void playGame(Card* deck) {
                 scanf(" %c", &cashOut);
 
                 if (cashOut == 'y') {
-                    printf("You cashed out with $%.2f\n. Your current balance is: $%.2f\n", main_balance + balance, main_balance + balance);
+                    printf("You cashed out with $%.2f. Your current balance is: $%.2f\n", balance, main_balance + balance);
                     main_balance += balance;
                     break;
                 }
@@ -207,9 +206,7 @@ void playGame(Card* deck) {
                 printf("Incorrect! The next card was: %s\n", getCardName(nextCard->rank));
                 printf("You lose your bet of $%.2f this round.\n", bet);
                 multiplier = baseMultiplier; // Reset multiplier on wrong guess
-                //main_balance-=bet;
-
-
+                balance = 0; // Reset balance
                 break;
             }
 
@@ -231,11 +228,12 @@ void playGame(Card* deck) {
             // Reset game variables
             score = 0;
             multiplier = baseMultiplier;
-            currentCard = shuffleDeck(createDeck());
+            balance = 0; // Reset balance for next game
         }
     }
 }
 
+// Main function
 int main() {
     Card* deck = createDeck();
     deck = shuffleDeck(deck);
